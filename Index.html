@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Peek and Pop Example</title>
+    <style>
+      /* Style for the preview window */
+      #preview-window {
+        position: absolute;
+        display: none;
+        width: 300px;
+        border: 1px solid black;
+        background-color: white;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        z-index: 9999;
+      }
+
+      #preview-window img {
+        width: 100%;
+        height: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Peek and Pop Example</h1>
+
+    <p>
+      This is a paragraph with a <a href="https://www.google.com">link</a>.
+    </p>
+    <ul>
+        <li><a href="https://mybrowseraddon.com/access-control-allow-origin.html?v=0.1.8&type=install">Gogle</a></li>
+        <li><a href="https://www.twitter.com/">Twitter</a></li>
+        <li><a href="https://www.facebook.com/">Facebook</a></li>
+        <li><a href="https://www.instagram.com/">Instagram</a></li>
+      </ul>
+
+    <div id="preview-window">
+      <img id="preview-image" />
+    </div>
+
+    <script>
+      const PROXY_URL = 'https://cors-anywhere.herokuapp.com/';
+
+      // Get references to the preview window and preview image
+      const previewWindow = document.getElementById('preview-window');
+      const previewImage = document.getElementById('preview-image');
+
+      function handleMouseEnter(event) {
+        const link = event.target;
+
+        const linkRect = link.getBoundingClientRect();
+        const linkX = linkRect.left + window.scrollX;
+        const linkY = linkRect.top + window.scrollY;
+
+        previewWindow.style.left = `${linkX - previewWindow.offsetWidth / 2}px`;
+        previewWindow.style.top = `${linkY - previewWindow.offsetHeight - 10}px`;
+
+        previewWindow.style.display = 'block';
+
+        const url = PROXY_URL + link.href; // use the proxy URL to fetch the resource
+        fetch(url)
+          .then(response => response.text())
+          .then(html => {
+            // parse the HTML and extract the preview image
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            const ogImage = doc.querySelector('meta[property="og:image"]');
+            const previewUrl = ogImage ? ogImage.content : null;
+            if (previewUrl) {
+              previewImage.src = previewUrl;
+            } else {
+              previewImage.src = ''; // clear the preview image if there is no image to show
+            }
+          });
+      }
+
+      function handleMouseLeave(event) {
+        previewWindow.style.display = 'none';
+      }
+
+      // Attach event listeners to all links on the page
+      const links = document.querySelectorAll('a');
+      for (const link of links) {
+        link.addEventListener('mouseenter', handleMouseEnter);
+        link.addEventListener('mouseleave', handleMouseLeave);
+      }
+    </script>
+  </body>
+</html>
